@@ -366,26 +366,33 @@ fn handle_request(mut stream: TcpStream,
              return;
            },
       9 => {
-             let cred_string: String = String::from_utf8(
+             let mut cred_string: String = String::from_utf8(
                                                buffer.to_vec())
                                                .unwrap();
 
+             cred_string = cred_string.trim_end_matches('\0').to_string();
+
              let session_token: String;
 
-             let (username, password);
+             let (mut username, mut password);
              match retrieve_sent_credentials(&cred_string) {
                Ok((usr, pass, _)) => {
                  (username, password) = (usr, pass);
                },
                Err(e) => {
                  resp = format!("HTTP/1.1 200 OK\r\n Content-Length: {}\r\n\r\n{}", 
-                    e.len(), 
+                    e.len(),
                     e);
                  stream.write(resp.as_bytes()).unwrap();
                  stream.flush().unwrap();
                  return;
                }
              }
+
+             let mut repeat_n: usize = 12 - username.len();
+             username = format!("{}{}", username, " ".repeat(repeat_n));
+             repeat_n = 15 - password.len();
+             password = format!("{}{}", password, " ".repeat(repeat_n));
 
              match retrieve_session(&cred_string) {
                Ok((session_tkn, _)) => {
@@ -418,6 +425,7 @@ fn handle_request(mut stream: TcpStream,
                     e);
                  stream.write(resp.as_bytes()).unwrap();
                  stream.flush().unwrap();
+                 return;
                } else {
                  let random_string: String = to_hex(&data);
                  resp = format!("HTTP/1.1 302 Found\r\n\
@@ -770,7 +778,7 @@ fn retrieve_session(req: &String) -> Result<(String, String), String> {
   let x: Vec<String> = (*req).split("\r\n")
                            .map(|e| e.to_string())
                            .collect();
-  if x.len() > 20 {
+  if x.len() > 40 {
     return Err("Request too long".to_string());
   }
   let bgn: String = "Cookie: ".to_string();
@@ -802,8 +810,8 @@ fn verify_credentials(username: &String,
                       ) -> Result<(), String> {
 
   let db_fread = Arc::clone(db_fread_mutex);
-  let mut file_read = db_fread.lock().unwrap();
-  file_read.seek(SeekFrom::Start(0)).unwrap();
+  let mut file_read = db_fread.lock().unwrap(); 
+  file_read.seek(SeekFrom::Start(0)).unwrap(); 
   let reader: BufReader<&File> = BufReader::new(&*file_read);
   let mut cnt: u8 = 0;
 
@@ -811,7 +819,7 @@ fn verify_credentials(username: &String,
   for line in reader.lines() {
     let cur_line: String = line.map_err(|_| "Error".to_string())?;
     x = cur_line.split(",").map(|e| e.to_string()).collect();
-    if x.len() != 4 {
+    if x.len() != 5 {
       return Err(format!("Error in 'db.txt' at line {}", cnt));
     }
     if x[0] == *username {
