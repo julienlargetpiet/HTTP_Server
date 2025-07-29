@@ -156,8 +156,6 @@ fn handle_request(mut stream: TcpStream,
   let expected_req: &[u8; 20] = b"POST /req HTTP/1.1\r\n";
   let expected_img: &[u8; 36] = b"GET /media/img/ev_ui4.jpg HTTP/1.1\r\n";
 
-  let random_data_read_mutex = Arc::clone(&random_data_fread_mutex);
-
   let mut content: String = String::new();
   let mut binary_content: Vec<u8> = Vec::<u8>::new();
   
@@ -295,7 +293,7 @@ fn handle_request(mut stream: TcpStream,
                return;
              }
 
-             let mut file = random_data_read_mutex.lock().unwrap();
+             let mut file = random_data_fread_mutex.lock().unwrap();
              file.seek(SeekFrom::Start(0)).unwrap();
              let mut data: [u8; 32] = [0u8; 32];
              if let Err(e) = file.read_exact(&mut data)
@@ -415,7 +413,7 @@ fn handle_request(mut stream: TcpStream,
 
              if let Ok(_) = verify_credentials(&username, &password, &db_fread_mutex) {
 
-               let mut file = random_data_read_mutex.lock().unwrap();
+               let mut file = random_data_fread_mutex.lock().unwrap();
                file.seek(SeekFrom::Start(0)).unwrap();
                let mut data: [u8; 32] = [0u8; 32];
                if let Err(e) = file.read_exact(&mut data)
@@ -739,8 +737,7 @@ fn add_user(username: &String,
   
   legitimate_credentials(username, password, email)?;
  
-  let db_fread = Arc::clone(db_fread_mutex);
-  let mut file_read = db_fread.lock().unwrap();
+  let mut file_read = (*db_fread_mutex).lock().unwrap();
   file_read.seek(SeekFrom::Start(0)).unwrap();
   let reader: BufReader<&File> = BufReader::new(&*file_read);
   for line in reader.lines() {
@@ -750,8 +747,7 @@ fn add_user(username: &String,
     }
   }
 
-  let db_append = Arc::clone(db_fappend_mutex);
-  let mut file = db_append.lock().unwrap();
+  let mut file = (*db_fappend_mutex).lock().unwrap();
 
   let mut n_rep: usize = 12 - (*username).len();
   let mut repeat_string: String = " ".repeat(n_rep);
@@ -809,8 +805,7 @@ fn verify_credentials(username: &String,
                       db_fread_mutex: &Arc<Mutex<File>>
                       ) -> Result<(), String> {
 
-  let db_fread = Arc::clone(db_fread_mutex);
-  let mut file_read = db_fread.lock().unwrap(); 
+  let mut file_read = (*db_fread_mutex).lock().unwrap(); 
   file_read.seek(SeekFrom::Start(0)).unwrap(); 
   let reader: BufReader<&File> = BufReader::new(&*file_read);
   let mut cnt: u8 = 0;
@@ -896,7 +891,7 @@ fn incr_tokens(line_data: (usize, String, String, String),
 
   const LINE_LEN: usize = 63;
   
-  let mut file = db_fwrite_mutex.lock().unwrap();
+  let mut file = (*db_fwrite_mutex).lock().unwrap();
 
   let offset: usize = index * LINE_LEN;
   file.seek(SeekFrom::Start(offset as u64))
@@ -1004,6 +999,7 @@ fn main() -> Result<(), String> {
   let r = running.clone();
   
   fn ending_func() {
+    //let random_data_read_mutex = Arc::clone(&random_data_fread_mutex);
     println!("Ending lol");
   }
 
