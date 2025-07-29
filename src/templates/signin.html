@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SignIn</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .top-nav {
+        background-color: #333;
+        padding: 10px 20px;
+        display: flex;
+        gap: 20px;
+    }
+    .top-nav a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .top-nav a:hover {
+        text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-nav">
+        <a href="/">Home</a>
+        <a href="/faq">FAQ</a>
+        <a href="/documentation">Docs</a>
+        <a href="/reviews">Reviews</a>
+        <a href="/signin">Sign In</a>
+  </div>
+  <h1>SignIn</h1>
+  <form method="POST" action="/created_account" enctype="application/x-www-form-urlencoded">
+    <input name="username" value="john_doe">
+    <input name="password" value="secret">
+    <input name="email" value="secret">
+  <button type="submit">Create Account</button>
+  <hr>
+</body>
+</html>
+
+

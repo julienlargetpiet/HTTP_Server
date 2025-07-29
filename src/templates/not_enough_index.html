@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Test</title>
+   <style>
+    #spinner {
+      display: none;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Not enough index</h1>
+  <hr>
+  <script>
+    async function fetch_data () {
+      const spinner = document.getElementById("spinner");
+      spinner.style.display = "block";
+      try {
+        const response = await fetch('http://127.0.0.1:8080/to_fetch', {
+          method: 'GET'})      
+        if (!response.ok) {
+          throw new Error("Error: ${response.status}");   
+        }
+        const data = await response.json();
+        document.getElementById("my_data").textContent = data.name;
+      } catch (err)  {
+        document.getElementById("my_data").textContent = 'Error';
+      } finally {
+        spinner.style.display = "none";
+      }
+    }
+  </script>
+  <button onclick="fetch_data()">Fetch Data</button>
+  <div id="spinner"></div>
+  <br>
+  <b id="my_data">OUI</b>
+</body>
+</html>
+
+

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Test</title>
+   <style>
+    #spinner {
+      display: none;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+  body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+  }
+  .top-nav {
+      background-color: #333;
+      padding: 10px 20px;
+      display: flex;
+      gap: 20px;
+  }
+  .top-nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+  }
+  .top-nav a:hover {
+      text-decoration: underline;
+  }
+  </style>
+</head>
+<body>
+
+   <div class="top-nav">
+        <a href="/f">Home</a>
+        <a href="/faq">FAQ</a>
+        <a href="/documentation">Docs</a>
+        <a href="/reviews">Reviews</a>
+        <a href="/signin">Sign In</a>
+  </div>
+
+  <h1>This is a test</h1>
+  <hr>
+  <script>
+    async function fetch_data () {
+      const spinner = document.getElementById("spinner");
+      spinner.style.display = "block";
+      try {
+        const response = await fetch('http://127.0.0.1:8080/to_fetch', {
+          method: 'GET'})      
+        if (!response.ok) {
+          throw new Error("Error: ${response.status}");   
+        }
+        const data = await response.json();
+        document.getElementById("my_data").textContent = data.name;
+      } catch (err)  {
+        document.getElementById("my_data").textContent = 'Error';
+      } finally {
+        spinner.style.display = "none";
+      }
+    }
+  </script>
+  <button onclick="fetch_data()">Fetch Data</button>
+  <div id="spinner"></div>
+  <br>
+  <b id="my_data">OUI</b>
+  <br>
+  <img src="media/img/ev_ui4.jpg" height="200" width="350">
+</body>
+</html>
+
+
