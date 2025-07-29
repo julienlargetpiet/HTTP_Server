@@ -997,15 +997,28 @@ fn main() -> Result<(), String> {
   
   let running = Arc::new(AtomicBool::new(true));
   let r = running.clone();
-  
-  fn ending_func() {
-    //let random_data_read_mutex = Arc::clone(&random_data_fread_mutex);
+ 
+  let session_tokens_for_sig: Arc<Mutex<HashSet<[u8; 32]>>> = session_tokens.clone();
+  fn ending_func(x: &Arc<Mutex<HashSet<[u8; 32]>>>) {
+    let session_read_mutex = (*x).lock().unwrap();
+    let mut file = OpenOptions::new()
+                      .write(true)
+                      .open("databases/session.txt")
+                      .unwrap();
+    file.seek(SeekFrom::Start(0))
+      .unwrap();
+    for tkn in session_read_mutex.iter() {
+      let mut cur_tkn: String = to_hex(tkn);
+      cur_tkn.push('\n');
+      file.write_all(cur_tkn.as_bytes())
+        .unwrap();
+    }
     println!("Ending lol");
   }
 
   ctrlc::set_handler(move || {
     println!("SIGINT received");
-    ending_func();
+    ending_func(&session_tokens_for_sig);
     r.store(false, Ordering::SeqCst);
     std::process::exit(0);
   }).expect("Error setting ctrlc handler");
