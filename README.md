@@ -11,4 +11,14 @@ So we got some:
 - Session cookie, fast verification and deletion with `HashSet<[u8; 32]>`
 - Image, favicon transfer, understanding how browsers will download the images, with good http header inormations
 
+# Run it
+
+```
+$ git clone https://github.com/julienlargetpiet/HTTP_Server
+$ cd HTTP_Server/src
+$ cargo run
+```
+
+Now go to your browser and type: `127.0.0.1:8080`
+
 
