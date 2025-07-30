@@ -89,4 +89,19 @@ Yess technically, but we can just intercept the Ending Signal that is sent by th
 
 Ok, but of what type is the HashSet ???
 
+First, i thought of `HashSet<String>` but it would be even faster to look if an element is in the set if the type would be store in the stack.
+
+Hmmm, first when i'm generating a session cookie, i will read 32 bytes in `/dev/urandom`, where BSD/ Linux stores truly unpredictable data like temperature, mem usage...
+
+And after that, because i want the cookie to be pure ASCII, i'm hexadecimaling all that with `to_hex`.
+
+Each byte in the buffer that read from `/dev/urandom` needs 2 hexadecimal characters to be encoded, so the final length of the cookie share to the browser if 64 characters long.
+
+When i'm receivin the cookie i'm decoding it from hexadecimal characters to an array of `[u8; 32]`.
+
+So yeah i've foreshadowed you but we will use an `HashSet<[u8; u32]>` that will be very fast to search in, even with the added time to do the conversion.
+
+But in fact we could have used an `HashSet<String>` to make the code simpler, and only conversion would be the one when reading a u8 bufer of length 32 and the hexadecimal conversion, but not when receiving and comparing the cookies, because we would have stored the actual hex conversion in the HashSet, instead of the raw data. (that's a thing to benchmark by the way)
+
+
 
