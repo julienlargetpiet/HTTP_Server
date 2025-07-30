@@ -206,6 +206,7 @@ fn handle_request(mut stream: TcpStream,
                      cur_val[i] = u8::from_str_radix(&session_token[i * 2..i * 2 + 2], 16).unwrap();
                  }
                  let all_sessions = session_tokens_mutex.lock().unwrap();
+                 println!("all_sessions: {:?}", all_sessions);
                  if all_sessions.contains(&cur_val) {
                    let mut file = OpenOptions::new()
                               .read(true)
@@ -462,10 +463,8 @@ fn handle_request(mut stream: TcpStream,
                  for i in 0..32 {
                      cur_val[i] = u8::from_str_radix(&session_token[i * 2..i * 2 + 2], 16).unwrap();
                  }
-                 let mut all_sessions = session_tokens_mutex.lock().unwrap();
-                 if all_sessions.contains(&cur_val) {
-                   all_sessions.remove(&cur_val);
-                 } else {
+                 let all_sessions = session_tokens_mutex.lock().unwrap();
+                 if !all_sessions.contains(&cur_val) {
                    resp = format!("HTTP/1.1 200 OK\r\n Content-Length: 16\r\n\r\n Cookie not found");
                    stream.write(resp.as_bytes()).unwrap();
                    stream.flush().unwrap();
