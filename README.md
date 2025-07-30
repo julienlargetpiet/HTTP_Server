@@ -39,6 +39,10 @@ In fact the ThreadPool is the manager and has 15 workers that accpets any task. 
 
 The TCP connection is automtically closed at the end of `handle_request()` because it owns it, so when it terminates, the current TCP connection goes out of scope and closes, disappears.
 
+# `handle_request()`
+
+Basically acts like a `marshalling yard` to call appropriate functions that corresponds to the intended action described by the client (browser) HTTP request
+
 ## Database `src/databases/db.txt`
 
 The database is composed of:
@@ -59,12 +63,6 @@ main function => **creating mutexes** for 3 different actions read, write append
 
 for each accepted TCP connection => the shared pointer containing the mutexes for the 3 different action to possibly operate in the database is cloned and passed to the handle_request function
 
-when ``
-
-
-
-
-
-
+when `handle_request()` detects that it needs to operate on the database, it call the appropriate function `add_user(), incr_tokens(), verify_credentials()` pass the `Arc<Mutex<File>>` that correponds to the appropriate actions to do.
 
 
