@@ -27,7 +27,7 @@ Now go to your browser and type: `127.0.0.1:8080`
 
 # Architectural details
 
-# TCP connection
+## TCP connection
 
 Simple enough, each new request has its own TCP connection (POST, GET...), the TCP connection is terminated when `handle_request()` ends.
 
@@ -57,7 +57,7 @@ The database is composed of:
 
 - session token of exactly 64 characters long
 
-# `db.txt` and concurrent acccess
+## `db.txt` and concurrent acccess
 
 main function => **creating mutexes** for 3 different actions read, write append (which is a simplified read action for adding elements)
 
