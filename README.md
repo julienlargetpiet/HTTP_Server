@@ -11,6 +11,10 @@ So we got some:
 - Session cookie, fast verification and deletion with `HashSet<[u8; 32]>`
 - Image, favicon transfer, understanding how browsers will download the images, with good http header inormations
 
+Note:
+
+This webapp architecture is based on a SaaS, with a potential paywall to request some work to do internally or to another server with custom API's.
+
 # Run it
 
 ```
