@@ -842,8 +842,9 @@ fn verify_tokens(username: &String,
                  db_fread_mutex: &Arc<Mutex<File>>,
                  ) -> Result<(usize, String, String, String), String> {
 
-  println!("username: {}|", username);
-  let username2: String = format!("{},", *username);
+  let n_repeat: usize = 12 - (*username).len();
+  let username2: String = format!("{}{},", *username, " ".repeat(n_repeat));
+  println!("username: {}|", username2);
   let username3: Vec<u8> = username2.into_bytes();
   let mut file = (*db_fread_mutex).lock().unwrap();
   file.seek(SeekFrom::Start(0)).unwrap();
@@ -853,6 +854,7 @@ fn verify_tokens(username: &String,
   for line in reader.lines() {
   
     let cur_string: String = line.map_err(|_| "Eror reading 'databases/db.txt'".to_string())?;
+    println!("cur_string: {}", cur_string);
     let content: Vec<u8> = (cur_string.clone()).into_bytes();
     
     if content.starts_with(&username3) {
@@ -865,17 +867,23 @@ fn verify_tokens(username: &String,
         return Err(format!("Error in 'databases/db.txt' at line {}", cnt));
       }
       
-      let now_tokens: u32 = cur_vec[3]
-                            .parse::<u32>()
+      let now_tokens: u64 = cur_vec[3]
+                            .parse::<u64>()
                             .map_err(|_| format!("Error while parsing current tokens for user: {}", cur_vec[0]))?;
-      let max_tokens: u32 = cur_vec[4]
-                            .parse::<u32>()
+      let max_tokens: u64 = cur_vec[4]
+                            .parse::<u64>()
                             .map_err(|_| format!("Error while parsing max tokens for user: {}", cur_vec[0]))?;
       
       if now_tokens >= max_tokens {
         return Err("Not enough tokens".to_string());
       } else {
-        return Ok((cnt, format!("{},{},{}", cur_vec[0], cur_vec[1], cur_vec[2]), cur_vec[2].clone(), cur_vec[3].clone()));
+
+        println!("cur_vec: {:?}", cur_vec);
+
+        return Ok((cnt, format!("{},{},{}", cur_vec[0].clone(), 
+                    cur_vec[1].clone(), 
+                    cur_vec[2].clone()), 
+                cur_vec[3].clone(), cur_vec[4].clone()));
       }
     
     }
@@ -889,6 +897,7 @@ fn incr_tokens(line_data: (usize, String, String, String),
                db_fwrite_mutex: &Arc<Mutex<File>>) -> Result<(), String> {
   
   let (index, credentials, cur_tokens, max_tokens) = line_data;
+  println!("cur_tokens: {}", cur_tokens);
   let mut nb_used_tokens: u64 = cur_tokens.parse::<u64>()
                                       .map_err(|_| "Error parsing used tokens".to_string())?;
   nb_used_tokens += incr_value;
