@@ -35,7 +35,7 @@
           throw new Error("Error: ${response.status}");   
         }
         const data = await response.json();
-        document.getElementById("my_data").textContent = data.name;
+        document.getElementById("my_data").textContent = data.success;
       } catch (err)  {
         document.getElementById("my_data").textContent = 'Error';
       } finally {
