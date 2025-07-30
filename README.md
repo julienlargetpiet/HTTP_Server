@@ -13,7 +13,7 @@ So we got some:
 
 Note:
 
-This webapp architecture is based on a SaaS, with a potential paywall to request some work to do internally or to another server with custom API's.
+This webapp architecture is based on a SaaS, with a potential paywall to request some work to do internally or to another server with custom APIs. A user has a predefine amount of tokens that can be redefined at line `771` (the last field).
 
 # Run it
 
@@ -64,5 +64,29 @@ main function => **creating mutexes** for 3 different actions read, write append
 for each accepted TCP connection => the shared pointer containing the mutexes for the 3 different action to possibly operate in the database is cloned and passed to the handle_request function
 
 when `handle_request()` detects that it needs to operate on the database, it call the appropriate function `add_user(), incr_tokens(), verify_credentials()` pass the `Arc<Mutex<File>>` that correponds to the appropriate actions to do.
+
+Because the databases is being read by other workers, we need to be sure that when we start reading from it, the cursor is at the beginning, so we use `SeekFrom(0)` before reading it.
+
+## `db.txt` and fast updates
+
+When we want to change the amount of token a user has used, we have to search for the right line.
+
+Pretty simple right, we just compare the beginning of each line to the intended username (since the first field is username).
+
+Then we we found it, instead of changing its line and buffering al contents in an array and then rewrite all in the file, we just change this line. But wait to be able to do this, since a file can be modeled as a buffer, we have to make sure that when we are jumping from a line to another, we stepped from a constant amount of bytes. It is why we have to make sure that all the lines are same length.
+
+So when a user is added, we have to padd its username, password and email to correspond to its maximum field size. We pad it with blank spaces. This happens in `add_user()`.
+
+## Session tokens and fast verification
+
+What can we do to have an amotised `O(1)` way of being able to verify that something is in a set????
+
+Right !!! **HashSet** of something
+
+But wait HashSet are just alive in the programm memory, what to do if we Ctrl-C the server, so all the HashSet data is gone ??? 
+
+Yess technically, but we can just intercept the Ending Signal that is sent by the Ctrl-C and execute a function here. You nailed it, in this function we will store the HashSet data in a permanant file that is `src/databases/sessions.txt` and when the server will start, one of te first thing we wil do is to load the sessions in this database in the HashSet.
+
+Ok, but of what type is the HashSet ???
 
 
