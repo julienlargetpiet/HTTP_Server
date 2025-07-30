@@ -153,7 +153,7 @@ fn handle_request(mut stream: TcpStream,
   let expected_signin: &[u8; 22] = b"GET /signin HTTP/1.1\r\n";
   let expected_signout: &[u8; 23] = b"GET /signout HTTP/1.1\r\n";
   let expected_connected: &[u8; 26] = b"POST /connected HTTP/1.1\r\n";
-  let expected_req: &[u8; 20] = b"POST /req HTTP/1.1\r\n";
+  let expected_req: &[u8; 27] = b"POST /do_the_req HTTP/1.1\r\n";
   let expected_img: &[u8; 36] = b"GET /media/img/ev_ui4.jpg HTTP/1.1\r\n";
 
   let mut content: String = String::new();
@@ -482,15 +482,24 @@ fn handle_request(mut stream: TcpStream,
                }
              }
 
-             match do_the_req(&username, &db_fwrite_mutex) {
+             println!("ICIIIII");
+
+             match do_the_req(&username, &db_fwrite_mutex, &db_fread_mutex) {
                Ok(_) => {
+        
+                println!("Success");
+
                  // do the actual req stuff, lie sending json data
+                 content = r#"{"success": 1, "error": ""}"#.to_string();
                },
                Err(e) => {
+
+                 println!("Error: {}", e);
+
                  if e == "Not enough tokens".to_string() {
-                   content = r#"{"not_enough": 1}"#.to_string();
+                   content = r#"{"success": 0, "error": "not_enough"}"#.to_string();
                  } else {
-                   content = format!(r#"{{"error": "{}"}}"#, e);
+                   content = format!(r#"{{"success": 0, "error": "{}"}}"#, e);
                  }
                },
              }
@@ -829,17 +838,21 @@ fn verify_credentials(username: &String,
 
 ///////////// Allow slight one request exceeding ////////////////
 
-fn verify_tokens(username: &String) -> Result<(usize, String, String, String), String> {
-  let username2: String = format!("{},", username);
+fn verify_tokens(username: &String,
+                 db_fread_mutex: &Arc<Mutex<File>>,
+                 ) -> Result<(usize, String, String, String), String> {
+
+  println!("username: {}|", username);
+  let username2: String = format!("{},", *username);
   let username3: Vec<u8> = username2.into_bytes();
-  let file = File::open("db.txt")
-      .map_err(|_| "Unable to open db.txt".to_string())?;
-  let reader = BufReader::new(file);
+  let mut file = (*db_fread_mutex).lock().unwrap();
+  file.seek(SeekFrom::Start(0)).unwrap();
+  let reader: BufReader<&File> = BufReader::new(&*file);
   let mut cnt: usize = 0;
 
   for line in reader.lines() {
   
-    let cur_string: String = line.map_err(|_| "Eror reading db.txt".to_string())?;
+    let cur_string: String = line.map_err(|_| "Eror reading 'databases/db.txt'".to_string())?;
     let content: Vec<u8> = (cur_string.clone()).into_bytes();
     
     if content.starts_with(&username3) {
@@ -849,7 +862,7 @@ fn verify_tokens(username: &String) -> Result<(usize, String, String, String), S
                                  .collect();
       
       if cur_vec.len() != 5 {
-        return Err(format!("Error in 'db.txt' at line {}", cnt));
+        return Err(format!("Error in 'databases/db.txt' at line {}", cnt));
       }
       
       let now_tokens: u32 = cur_vec[3]
@@ -906,8 +919,13 @@ fn incr_tokens(line_data: (usize, String, String, String),
 //////// When user do a request ////////
 
 fn do_the_req(username: &String,
-              db_fwrite_mutex: &Arc<Mutex<File>>) -> Result<(), String> {
-  let (index, credentials, cur_tokens, max_tokens) = verify_tokens(username)?;
+              db_fwrite_mutex: &Arc<Mutex<File>>,
+              db_fread_mutex: &Arc<Mutex<File>>) -> Result<(), String> {
+  let (index, 
+      credentials, 
+      cur_tokens, 
+      max_tokens) = verify_tokens(username,
+                                  db_fread_mutex)?;
   let incr_value = 100;
   incr_tokens((index, credentials, cur_tokens, max_tokens), 
               incr_value,

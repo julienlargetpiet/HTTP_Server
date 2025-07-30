@@ -29,8 +29,8 @@
       const spinner = document.getElementById("spinner");
       spinner.style.display = "block";
       try {
-        const response = await fetch('http://127.0.0.1:8080/to_fetch', {
-          method: 'GET'})      
+        const response = await fetch('http://127.0.0.1:8080/do_the_req', {
+          method: 'POST'})      
         if (!response.ok) {
           throw new Error("Error: ${response.status}");   
         }
@@ -43,7 +43,7 @@
       }
     }
   </script>
-  <button onclick="fetch_data()">Fetch Data</button>
+  <button onclick="fetch_data()">Do The Req</button>
   <div id="spinner"></div>
   <br>
   <b id="my_data">OUI</b>
