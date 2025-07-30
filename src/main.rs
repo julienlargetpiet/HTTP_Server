@@ -6,7 +6,6 @@ use std::collections::HashSet;
 use std::fs::{OpenOptions, File};
 use std::time::Duration;
 use std::sync::atomic::{AtomicBool, Ordering};
-//use std::net::SocketAddr;
 
 enum Message {
   NewJob(Job),
