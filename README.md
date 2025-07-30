@@ -25,4 +25,46 @@ $ cargo run
 
 Now go to your browser and type: `127.0.0.1:8080`
 
+# Architectural details
+
+# TCP connection
+
+Simple enough, each new request has its own TCP connection (POST, GET...), the TCP connection is terminated when `handle_request()` ends.
+
+`handle_request()` is charged to determine the logic to operate based on the content to the HTTP request, method, path, Cookies...
+
+`handle_request()` is launched inside a ThreadPool to allow concurrent client requests to operate concurently, up to 15 (this parameter can be changed at line `949`)
+
+In fact the ThreadPool is the manager and has 15 workers that accpets any task. The task is always to proceed `handle_request()`. But of course when a job is launched, it can be sent to just one worker and a worker that is not busy, it is why this job is mutex protected, so just workers that has nothing to do can receive it, and only the first one to receive it that can execute the job.
+
+The TCP connection is automtically closed at the end of `handle_request()` because it owns it, so when it terminates, the current TCP connection goes out of scope and closes, disappears.
+
+## Database `src/databases/db.txt`
+
+The database is composed of:
+
+- username (12 max chars)
+- password (15 max chars)
+- email (20 max users)
+- tokens used (10 max chars -> length of `MAX::u64`)
+- maximum tokens (10 max chars -> length of `MAX::u64`)
+
+## Database `src/databases/sessions.txt`
+
+- session token of exactly 64 characters long
+
+# `db.txt` and concurrent acccess
+
+main function => **creating mutexes** for 3 different actions read, write append (which is a simplified read action for adding elements)
+
+for each accepted TCP connection => the shared pointer containing the mutexes for the 3 different action to possibly operate in the database is cloned and passed to the handle_request function
+
+when ``
+
+
+
+
+
+
+
 
