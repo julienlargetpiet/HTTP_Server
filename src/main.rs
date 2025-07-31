@@ -374,8 +374,8 @@ fn handle_request(mut stream: TcpStream,
              let session_token: String;
 
              let (mut username, mut password);
-             match retrieve_sent_credentials(&cred_string) {
-               Ok((usr, pass, _)) => {
+             match retrieve_sent_credentials_signin(&cred_string) {
+               Ok((usr, pass)) => {
                  (username, password) = (usr, pass);
                },
                Err(e) => {
@@ -556,6 +556,39 @@ fn handle_request(mut stream: TcpStream,
   }
   return;
 }
+
+fn retrieve_sent_credentials_signin(x: &String) -> Result<(String, String), String> {
+  println!("{}", x);
+  let mut vec: Vec<String> = (*x).split("\r\n")
+                         .map(|e| e.to_string())
+                         .collect();
+  let n: usize = vec.len();
+  println!("{:?}", vec);
+  if n == 0 {
+    return Err("Bad request format".to_string());
+  }
+  vec[n - 1] = url_decode(&vec[n - 1]);
+  vec = vec[n - 1].split("&")
+                  .map(|e| e.to_string())
+                  .collect();
+  if vec.len() != 2 {
+    return Err("Bad request format".to_string());
+  }
+  let vec1: Vec<String> = vec[0].split("=")
+                                .map(|e| e.to_string())
+                                .collect();
+  if vec1.len() != 2 {
+    return Err("Bad request format".to_string());
+  }
+  let vec2: Vec<String> = vec[1].split("=")
+                                .map(|e| e.to_string())
+                                .collect();
+  if vec2.len() != 2 {
+    return Err("Bad request format".to_string());
+  }
+  Ok((vec1[1].clone(), vec2[1].clone())) 
+}
+
 
 fn retrieve_sent_credentials(x: &String) -> Result<(String, String, String), String> {
   println!("{}", x);
