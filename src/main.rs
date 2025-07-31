@@ -133,7 +133,6 @@ fn url_decode(input: &String) -> String {
 fn handle_request(mut stream: TcpStream, 
                   db_fappend_mutex: Arc<Mutex<File>>,
                   db_fread_mutex: Arc<Mutex<File>>,
-                  random_data_fread_mutex: Arc<Mutex<File>>,
                   session_tokens_mutex: Arc<Mutex<HashSet<[u8; 32]>>>,
                   db_fwrite_mutex: Arc<Mutex<File>>) {
 
@@ -293,8 +292,10 @@ fn handle_request(mut stream: TcpStream,
                return;
              }
 
-             let mut file = random_data_fread_mutex.lock().unwrap();
-             file.seek(SeekFrom::Start(0)).unwrap();
+             let mut file = OpenOptions::new()
+                 .read(true)
+                 .open("/dev/urandom")
+                 .unwrap();
              let mut data: [u8; 32] = [0u8; 32];
              if let Err(e) = file.read_exact(&mut data)
                  .map_err(|_| "Unable to read from '/dev/urandom'".to_string()) {
@@ -413,8 +414,11 @@ fn handle_request(mut stream: TcpStream,
 
              if let Ok(_) = verify_credentials(&username, &password, &db_fread_mutex) {
 
-               let mut file = random_data_fread_mutex.lock().unwrap();
-               file.seek(SeekFrom::Start(0)).unwrap();
+               let mut file = OpenOptions::new()
+                 .read(true)
+                 .open("/dev/urandom")
+                 .unwrap();
+
                let mut data: [u8; 32] = [0u8; 32];
                if let Err(e) = file.read_exact(&mut data)
                    .map_err(|_| "Unable to read from '/dev/urandom'".to_string()) {
@@ -979,15 +983,15 @@ fn main() -> Result<(), String> {
                                              Mutex::new(file)
                                            );
 
-  file = OpenOptions::new()
-      .read(true)
-      .open("/dev/urandom")
-      .map_err(|_| "Error opening to 'dev/urandom'"
-              .to_string())?;
+  //file = OpenOptions::new()
+  //    .read(true)
+  //    .open("/dev/urandom")
+  //    .map_err(|_| "Error opening to 'dev/urandom'"
+  //            .to_string())?;
 
-  let random_data_mutex_read: Arc<Mutex<File>> = Arc::new(
-                                           Mutex::new(file)
-                                         );
+  //let random_data_mutex_read: Arc<Mutex<File>> = Arc::new(
+  //                                         Mutex::new(file)
+  //                                       );
 
   ///////////////////////////////////////////////
 
@@ -1057,14 +1061,13 @@ fn main() -> Result<(), String> {
       let clones = (
           db_mutex_append.clone(),
           db_mutex_read.clone(),
-          random_data_mutex_read.clone(),
           session_tokens.clone(),
           db_mutex_write.clone(),
       );
 
       thread_pool.execute(move || {
           handle_request(cur_stream, clones.0, clones.1, 
-                         clones.2, clones.3, clones.4);
+                         clones.2, clones.3);
       });
     } 
   }
