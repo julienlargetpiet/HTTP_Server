@@ -734,7 +734,7 @@ fn legitimate_credentials(username: & String,
  
   if (*password)
       .chars()
-      .any(|e| e.is_whitespace() || !e.is_ascii()) {
+      .any(|e| e.is_whitespace() || !e.is_ascii() || e == ',') {
     return Err("Password should not contain any whitespace and must be ASCII only".to_string());
   } 
 
