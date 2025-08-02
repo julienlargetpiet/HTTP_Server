@@ -785,7 +785,12 @@ fn add_user(username: &String,
   file_read.seek(SeekFrom::Start(0)).unwrap();
   let reader: BufReader<&File> = BufReader::new(&*file_read);
   for line in reader.lines() {
-    let mut cur_str: String = line.map_err(|_| "failed to read from 'db.txt'".to_string())?;
+    let cur_vec: Vec<String> = line
+                               .unwrap()
+                               .split(",")
+                               .map(|e| e.to_string())
+                               .collect();
+    let mut cur_str: String = cur_vec[0].clone();
     cur_str = cur_str.trim_end_matches(' ').to_string();
     if cur_str == *username {
       return Err("Username already taken".to_string());
