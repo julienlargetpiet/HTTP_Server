@@ -787,7 +787,7 @@ fn add_user(username: &String,
   for line in reader.lines() {
     let mut cur_str: String = line.map_err(|_| "failed to read from 'db.txt'".to_string())?;
     cur_str = cur_str.trim_end_matches(' ').to_string();
-    if cur_str.starts_with(username) {
+    if cur_str == *username {
       return Err("Username already taken".to_string());
     }
   }
