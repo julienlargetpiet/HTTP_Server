@@ -740,9 +740,15 @@ fn legitimate_credentials(username: & String,
 
   let password_vec: Vec<char> = (*password).chars().collect();
 
+
+  let mut alrd1: bool = false;
+  let mut alrd2: bool = false;
+  let mut alrd3: bool = false;
+
   for chr in &password_vec {
     for chr2 in &ref_letters {
-      if *chr2 == *chr {
+      if *chr2 == *chr && !alrd1 {
+        alrd1 = true;
         if cnt == 2 {
           return Ok(());
         }
@@ -751,7 +757,8 @@ fn legitimate_credentials(username: & String,
       }
     }
     for chr2 in &ref_symbols {
-      if *chr2 == *chr {
+      if *chr2 == *chr && !alrd2 {
+        alrd2 = true;
         if cnt == 2 {
           return Ok(());
         }
@@ -760,7 +767,8 @@ fn legitimate_credentials(username: & String,
       }
     }
     for chr2 in &ref_numbers {
-      if *chr2 == *chr {
+      if *chr2 == *chr && !alrd3 {
+        alrd3 = true;
         if cnt == 2 {
           return Ok(());
         }
