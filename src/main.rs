@@ -397,13 +397,8 @@ fn handle_request(mut stream: TcpStream,
                Ok((session_tkn, _)) => {
                  session_token = session_tkn;
                },
-               Err(e) => {
-                 resp = format!("HTTP/1.1 200 OK\r\n Content-Length: {}\r\n\r\n{}", 
-                    e.len(), 
-                    e);
-                 stream.write(resp.as_bytes()).unwrap();
-                 stream.flush().unwrap();
-                 return;
+               Err(_) => {
+                 session_token = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string();
                }
              }
 
